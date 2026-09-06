@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.env
+
+# workspace runtime data — never commit secrets, DBs, or user-uploaded files
+backend/workspace/.jwt_secret
+backend/workspace/*.db
+backend/workspace/uploads/
+backend/workspace/artifacts/
+backend/workspace/knowledge_base/
+backend/workspace/model_registry.json
+
+# editor/OS junk
+.vscode/
+.DS_Store
