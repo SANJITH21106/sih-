@@ -1,9 +1,0 @@
-backend/workspace/*.db
-backend/workspace/.jwt_secret
-backend/workspace/*.json
-__pycache__/
-*.py[cod]
-backend/workspace/uploads/*
-backend/workspace/knowledge_base/*
-
-
