@@ -1,4 +1,3 @@
-git commit -m "Backend: Phase 9 (artifacts endpoint with path-traversal protection)"
 from __future__ import annotations
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, status
