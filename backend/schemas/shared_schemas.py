@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 from pydantic import BaseModel
 
 TaskStatus = Literal["CREATED", "PLANNING", "RUNNING", "WAITING",
@@ -33,7 +33,7 @@ class Verification(BaseModel):
     notes: str
 
 class ModelInfo(BaseModel):
-    model_id: ModelId
+    model_id: Union[ModelId, str]
     model_name: str
     model_type: str
     capabilities: list[str]
@@ -53,7 +53,7 @@ class TaskState(BaseModel):
     user_request: str
     input_files: list[str] = []
     task_type: Optional[TaskType] = None
-    selected_model: Optional[ModelId] = None
+    selected_model: Optional[Union[ModelId, str]] = None
     current_agent: Optional[AgentName] = None
     plan: Optional[list[str]] = None
     current_step: Optional[int] = None
@@ -81,7 +81,7 @@ class TaskFinalResponse(BaseModel):
     answer: Optional[str]
     task_type: Optional[TaskType]
     agent: Optional[AgentName]
-    model: Optional[ModelId]
+    model: Optional[Union[ModelId, str]]
     plan: Optional[list[str]]
     tool_calls: list[dict]
     sources: list[Source]
