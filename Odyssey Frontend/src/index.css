@@ -1,0 +1,160 @@
+/* MRPL Sovereign AI Workbench - Master CSS Design System */
+
+:root {
+  /* Brand Palette */
+  --mrpl-primary: #4A7C2A;
+  --mrpl-hover: #3F6B24;
+  --mrpl-text-primary: #4A4F3F;
+  --mrpl-text-secondary: #6B7F5B;
+  --mrpl-bg-main: #FFFFFF;
+  --mrpl-bg-light: #F7F9F5;
+  --mrpl-bg-green-light: #EEF5E9;
+  --mrpl-border: #DDE4D8;
+
+  /* Status Colors */
+  --status-created-fg: #4A5568;
+  --status-created-bg: #EDF2F7;
+  --status-created-border: #CBD5E0;
+
+  --status-planning-fg: #1D4ED8;
+  --status-planning-bg: #EFF6FF;
+  --status-planning-border: #BFDBFE;
+
+  --status-running-fg: #1E40AF;
+  --status-running-bg: #DBEAFE;
+  --status-running-border: #93C5FD;
+
+  --status-waiting-fg: #B45309;
+  --status-waiting-bg: #FEF3C7;
+  --status-waiting-border: #FDE68A;
+
+  --status-verifying-fg: #6D28D9;
+  --status-verifying-bg: #F3E8FF;
+  --status-verifying-border: #DDD6FE;
+
+  --status-completed-fg: #15803D;
+  --status-completed-bg: #DCFCE7;
+  --status-completed-border: #86EFAC;
+
+  --status-failed-fg: #B91C1C;
+  --status-failed-bg: #FEE2E2;
+  --status-failed-border: #FCA5A5;
+
+  /* Typography */
+  --font-family: "Segoe UI", Arial, sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-title: 28px;
+
+  /* Spacing System (8px Grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Layout Dimensions */
+  --header-height: 64px;
+  --sidebar-width: 260px;
+  --context-panel-width: 380px;
+
+  /* Radius & Shadows */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--mrpl-text-primary);
+  background-color: var(--mrpl-bg-light);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, textarea, select {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--mrpl-text-primary);
+}
+
+/* Base Utility Classes */
+.btn-primary {
+  background-color: var(--mrpl-primary);
+  color: #ffffff;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: background-color 0.15s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--mrpl-hover);
+}
+
+.btn-secondary {
+  background-color: var(--mrpl-bg-main);
+  color: var(--mrpl-text-primary);
+  border: 1px solid var(--mrpl-border);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: background-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--mrpl-bg-green-light);
+}
+
+.card {
+  background-color: var(--mrpl-bg-main);
+  border: 1px solid var(--mrpl-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Subtle Pulse Animation for RUNNING state */
+@keyframes subtle-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.65; }
+  100% { opacity: 1; }
+}
+
+.pulse-running {
+  animation: subtle-pulse 1.8s infinite ease-in-out;
+}
+
+.session-item-hover:hover {
+  background-color: var(--mrpl-bg-light);
+}
+
