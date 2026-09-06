@@ -1,0 +1,4 @@
+backend/workspace/*.db
+backend/workspace/.jwt_secret
+__pycache__/
+*.py[cod]

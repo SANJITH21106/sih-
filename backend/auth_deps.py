@@ -139,3 +139,17 @@ async def get_current_user_ws(
         return await auth_store.get_user_by_id(user_id)
     except Exception:
         return None
+
+
+async def get_current_admin(user: User = Depends(get_current_user)) -> User:
+    """Dependency that ensures the authenticated user has role='admin'.
+
+    Raises 403 Forbidden if not an admin.
+    """
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return user
+

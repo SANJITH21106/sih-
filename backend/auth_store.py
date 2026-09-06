@@ -4,7 +4,7 @@ import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 from passlib.context import CryptContext
 
 try:
@@ -36,20 +36,56 @@ def _get_connection() -> sqlite3.Connection:
             user_id TEXT PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user',
             created_at TEXT NOT NULL
         )
         """
     )
+    # Check if 'role' column exists in case table was created previously
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "role" not in columns:
+        conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+        conn.commit()
+
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)"
     )
     return conn
 
 
-async def create_user(username: str, password: str) -> User:
-    """Create a new user with hashed password.
+async def has_admin_user() -> bool:
+    """Return True if at least one user with role='admin' exists."""
+    conn = _get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1")
+        return cursor.fetchone() is not None
+    finally:
+        conn.close()
 
-    Raises UserAlreadyExistsError if username is taken.
+
+async def count_admin_users() -> int:
+    """Return count of users with role='admin'."""
+    conn = _get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+        row = cursor.fetchone()
+        return row[0] if row else 0
+    finally:
+        conn.close()
+
+
+async def create_user(
+    username: str,
+    password: str,
+    role: Literal["admin", "user"] = "user",
+) -> User:
+    """Create a new user with hashed password and role.
+
+    Role defaults to 'user' and cannot be set via public registration bodies.
     Plaintext password is never stored or logged.
     """
     conn = _get_connection()
@@ -61,14 +97,14 @@ async def create_user(username: str, password: str) -> User:
             with conn:
                 conn.execute(
                     """
-                    INSERT INTO users (user_id, username, password_hash, created_at)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO users (user_id, username, password_hash, role, created_at)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
-                    (user_id, username, password_hash, created_at),
+                    (user_id, username, password_hash, role, created_at),
                 )
         except sqlite3.IntegrityError:
             raise UserAlreadyExistsError(f"Username '{username}' is already taken")
-        return User(user_id=user_id, username=username, created_at=created_at)
+        return User(user_id=user_id, username=username, role=role, created_at=created_at)
     finally:
         conn.close()
 
@@ -78,13 +114,13 @@ async def get_user_by_username(username: str) -> Optional[User]:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT user_id, username, created_at FROM users WHERE username = ?",
+            "SELECT user_id, username, role, created_at FROM users WHERE username = ?",
             (username,),
         )
         row = cursor.fetchone()
         if row is None:
             return None
-        return User(user_id=row[0], username=row[1], created_at=row[2])
+        return User(user_id=row[0], username=row[1], role=row[2], created_at=row[3])
     finally:
         conn.close()
 
@@ -94,13 +130,13 @@ async def get_user_by_id(user_id: str) -> Optional[User]:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT user_id, username, created_at FROM users WHERE user_id = ?",
+            "SELECT user_id, username, role, created_at FROM users WHERE user_id = ?",
             (user_id,),
         )
         row = cursor.fetchone()
         if row is None:
             return None
-        return User(user_id=row[0], username=row[1], created_at=row[2])
+        return User(user_id=row[0], username=row[1], role=row[2], created_at=row[3])
     finally:
         conn.close()
 
@@ -108,21 +144,21 @@ async def get_user_by_id(user_id: str) -> Optional[User]:
 async def verify_password(username: str, password: str) -> Optional[User]:
     """Verify credentials without logging or exposing password.
 
-    Returns User if valid, None if invalid or user does not exist.
+    Returns User with role if valid, None if invalid or user does not exist.
     """
     conn = _get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT user_id, username, password_hash, created_at FROM users WHERE username = ?",
+            "SELECT user_id, username, password_hash, role, created_at FROM users WHERE username = ?",
             (username,),
         )
         row = cursor.fetchone()
         if row is None:
             return None
-        user_id, uname, pwd_hash, created_at = row
+        user_id, uname, pwd_hash, role, created_at = row
         if not pwd_context.verify(password, pwd_hash):
             return None
-        return User(user_id=user_id, username=uname, created_at=created_at)
+        return User(user_id=user_id, username=uname, role=role, created_at=created_at)
     finally:
         conn.close()

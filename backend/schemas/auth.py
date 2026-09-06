@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class User(BaseModel):
     user_id: str
     username: str
+    role: Literal["admin", "user"] = "user"
     created_at: str
 
 class RegisterRequest(BaseModel):
