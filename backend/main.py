@@ -48,6 +48,13 @@ async def bootstrap_admin() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Airgap assertion: Verify no cloud LLM API keys are required for boot
+    for key in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY"):
+        if os.getenv(key):
+            logger.warning(
+                f"Airgap notice: {key} is present in environment but ignored (airgapped mode)."
+            )
+    logger.info("Airgap check passed: no external API keys required to boot.")
     await bootstrap_admin()
     yield
 

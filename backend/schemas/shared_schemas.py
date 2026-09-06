@@ -41,6 +41,12 @@ class ModelInfo(BaseModel):
     quantization: str
     memory_requirement: str
     supported_tasks: list[TaskType]
+    ollama_tag: Optional[str] = None
+    is_default_for_tasks: list[TaskType] = []
+
+class ModelsListResponse(BaseModel):
+    models: list[ModelInfo]
+
 
 class TaskState(BaseModel):
     task_id: str
