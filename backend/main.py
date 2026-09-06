@@ -6,10 +6,10 @@ from fastapi import FastAPI
 
 try:
     from backend import auth_store
-    from backend.api import artifacts, auth, chat, health, knowledge, models, stream
+    from backend.api import artifacts, auth, chat, health, knowledge, models, network, stream
 except ImportError:
     import auth_store
-    from api import artifacts, auth, chat, health, knowledge, models, stream
+    from api import artifacts, auth, chat, health, knowledge, models, network, stream
 
 logger = logging.getLogger("workbench.admin")
 
@@ -80,5 +80,9 @@ app.include_router(knowledge.router, prefix="/api")
 
 # Artifacts endpoints: /api/artifacts/{artifact_id}
 app.include_router(artifacts.router, prefix="/api")
+
+# Network monitoring endpoints: /api/network/status, /api/network/stream
+app.include_router(network.router, prefix="/api")
+
 
 

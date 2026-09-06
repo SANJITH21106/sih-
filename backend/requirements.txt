@@ -6,4 +6,6 @@ websockets
 passlib[bcrypt]
 pyjwt
 httpx
+psutil
+
 

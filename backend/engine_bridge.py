@@ -396,15 +396,22 @@ async def _execute_path_e(state: TaskState) -> None:
     state.status = "FAILED"
     task_store.save(state)
 
-    # Call network_monitor.record_blocked_attempt (built in Phase 9.5)
+    # Call network_monitor.record_blocked_attempt
     try:
         from backend import network_monitor
         network_monitor.record_blocked_attempt(
-            task_id=state.task_id,
             reason=refusal_msg,
+            task_id=state.task_id,
         )
-    except (ImportError, AttributeError):
-        pass
+    except ImportError:
+        try:
+            import network_monitor
+            network_monitor.record_blocked_attempt(
+                reason=refusal_msg,
+                task_id=state.task_id,
+            )
+        except Exception:
+            pass
 
 
 async def subscribe(task_id: str) -> AsyncGenerator[dict[str, Any], None]:
