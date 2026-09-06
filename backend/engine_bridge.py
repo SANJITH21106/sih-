@@ -220,14 +220,27 @@ async def _execute_path_b(state: TaskState) -> None:
     state.tool_results.append(
         {"tool": "file_write", "output": "Wrote file: deviation_report.pdf"}
     )
-    state.generated_artifacts.append(
-        Artifact(
-            artifact_id="art-doc-001",
-            file_name="deviation_report.pdf",
-            file_type="pdf",
-            download_url="/api/artifacts/art-doc-001",
+    # If spreadsheet input or request, generate XLSX artifact, else PDF report
+    msg_lower = (state.user_request or "").lower()
+    has_xlsx = any(str(f).lower().endswith(".xlsx") for f in (state.input_files or []))
+    if has_xlsx or "xlsx" in msg_lower or "spreadsheet" in msg_lower:
+        state.generated_artifacts.append(
+            Artifact(
+                artifact_id="art-sample-xlsx",
+                file_name="financial_analysis.xlsx",
+                file_type="xlsx",
+                download_url="/api/artifacts/art-sample-xlsx",
+            )
         )
-    )
+    else:
+        state.generated_artifacts.append(
+            Artifact(
+                artifact_id="art-doc-001",
+                file_name="deviation_report.pdf",
+                file_type="pdf",
+                download_url="/api/artifacts/art-doc-001",
+            )
+        )
     task_store.save(state)
 
     # Step 7: VERIFYING
