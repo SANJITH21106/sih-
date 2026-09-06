@@ -3,12 +3,16 @@ import json
 import os
 import uuid
 from pathlib import Path
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 try:
     from backend.schemas.knowledge import IngestResponse, KnowledgeDocument
+    from backend.schemas.auth import User
+    from backend.auth_deps import get_current_admin, get_current_user
 except ImportError:
     from schemas.knowledge import IngestResponse, KnowledgeDocument
+    from schemas.auth import User
+    from auth_deps import get_current_admin, get_current_user
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
@@ -42,8 +46,11 @@ def _save_index(records: list[dict]) -> None:
 
 
 @router.post("/ingest", response_model=IngestResponse)
-async def ingest_document(file: UploadFile = File(...)):
-    """Ingest a single document into the local knowledge base."""
+async def ingest_document(
+    file: UploadFile = File(...),
+    _admin: User = Depends(get_current_admin),
+):
+    """Ingest a single document into the local knowledge base (admin only)."""
     filename = file.filename or ""
     if not filename:
         raise HTTPException(
@@ -80,7 +87,9 @@ async def ingest_document(file: UploadFile = File(...)):
 
 
 @router.get("/documents", response_model=list[KnowledgeDocument])
-async def list_documents():
-    """List all ingested documents in the knowledge base."""
+async def list_documents(
+    _user: User = Depends(get_current_user),
+):
+    """List all ingested documents in the knowledge base (authenticated users)."""
     records = _load_index()
     return [KnowledgeDocument(**r) for r in records]
