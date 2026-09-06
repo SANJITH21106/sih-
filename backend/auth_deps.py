@@ -59,27 +59,31 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 async def get_current_user(
     authorization: Optional[str] = Header(None, alias="Authorization"),
+    token_query: Optional[str] = Query(None, alias="token"),
 ) -> User:
-    """Dependency that extracts and validates the Bearer token from Authorization header.
+    """Dependency that extracts and validates the Bearer token from Authorization header
 
-    Returns the authenticated User or raises 401 Unauthorized.
+    (or ?token= query param). Returns the authenticated User or raises 401 Unauthorized.
     """
-    if not authorization:
+    token = None
+    if authorization:
+        parts = authorization.split()
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Malformed Authorization header, expected 'Bearer <token>'",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        token = parts[1]
+    elif token_query:
+        token = token_query
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing Authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Malformed Authorization header, expected 'Bearer <token>'",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = parts[1]
     try:
         payload = decode_access_token(token)
     except jwt.ExpiredSignatureError:
