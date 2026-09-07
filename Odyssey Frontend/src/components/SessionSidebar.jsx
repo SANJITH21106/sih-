@@ -83,11 +83,10 @@ export function SessionSidebar({
     <aside
       className="session-sidebar-container"
       style={{
-        width: '260px',
+        width: '288px',
         height: '100%',
-        backgroundColor: 'var(--mrpl-bg-main)',
+        backgroundColor: 'var(--mrpl-surface)',
         borderRight: '1px solid var(--mrpl-border)',
-        borderRadius: '6px',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -97,29 +96,17 @@ export function SessionSidebar({
       {/* 1. Header & New Session Action */}
       <div
         style={{
-          padding: '14px 16px',
+          padding: '16px',
           borderBottom: '1px solid var(--mrpl-border)',
-          backgroundColor: 'var(--mrpl-bg-light)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
+          gap: '12px',
+          backgroundColor: 'var(--mrpl-surface)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--mrpl-primary)', letterSpacing: '0.3px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--mrpl-text-secondary)', fontFamily: 'var(--font-mono)' }}>
             CHAT SESSIONS
-          </span>
-          <span
-            style={{
-              fontSize: '11px',
-              backgroundColor: 'var(--mrpl-bg-green-light)',
-              color: 'var(--mrpl-primary)',
-              padding: '2px 6px',
-              borderRadius: '10px',
-              fontWeight: 600,
-            }}
-          >
-            {sessions.length}
           </span>
         </div>
 
@@ -128,21 +115,15 @@ export function SessionSidebar({
           className="btn-primary"
           style={{
             width: '100%',
-            padding: '8px 12px',
-            fontSize: '13px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            cursor: 'pointer',
-            backgroundColor: 'var(--mrpl-primary)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '4px',
+            padding: '8px 12px',
+            fontSize: '12px',
           }}
         >
-          <span>➕</span> New Session
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+            add
+          </span>
+          <span>+ New Session</span>
         </button>
       </div>
 

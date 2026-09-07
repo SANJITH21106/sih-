@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getToken, clearToken, apiGetHealth, apiGetModels, apiGetKnowledgeDocuments } from './api/client';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
-import { LocalOnlyBadge } from './components/LocalOnlyBadge';
-import { ModelRegistryPanel } from './components/ModelRegistryPanel';
-import { KnowledgeBasePanel } from './components/KnowledgeBasePanel';
+import { TopHeader } from './components/TopHeader';
+import { AdminNavTabs } from './components/AdminNavTabs';
+import { DynamicBreadcrumb } from './components/DynamicBreadcrumb';
+import { UsersView } from './components/admin/UsersView';
+import { ExternalApiView } from './components/admin/ExternalApiView';
+import { ModelsView } from './components/admin/ModelsView';
+import { KnowledgeBaseView } from './components/admin/KnowledgeBaseView';
+import { SovereigntyView } from './components/admin/SovereigntyView';
 import { ChatWindow } from './components/ChatWindow';
 import { SessionSidebar } from './components/SessionSidebar';
 import {
@@ -22,15 +27,19 @@ export function App() {
   const [authView, setAuthView] = useState('login'); // 'login' | 'register'
   const [currentUser, setCurrentUser] = useState(() => {
     const token = getToken();
-    return token ? { username: 'operator', role: 'USER' } : null;
+    return token ? { username: 'operator', role: 'ADMIN' } : null;
   });
 
-  const [showSystemPanels, setShowSystemPanels] = useState(false);
+  // View Mode: 'workbench' | 'admin'
+  const [currentView, setCurrentView] = useState('workbench');
+  // Admin Tab: 'users' | 'external-api' | 'models' | 'knowledge-base' | 'sovereignty' | 'chat'
+  const [activeAdminTab, setActiveAdminTab] = useState('users');
+
   const [healthData, setHealthData] = useState(null);
   const [modelsData, setModelsData] = useState(null);
   const [documentsData, setDocumentsData] = useState(null);
 
-  // --- SESSION STATE (Phase 11) ---
+  // --- SESSION STATE ---
   const [sessions, setSessions] = useState(() => {
     const loaded = getSessions();
     if (loaded.length === 0) {
@@ -49,10 +58,9 @@ export function App() {
     return currentSessions[0]?.session_id || null;
   });
 
-  // Derived Active Session Object
   const activeSession = sessions.find((s) => s.session_id === activeSessionId) || null;
 
-  // Session Action Handlers
+  // Session Handlers
   const handleSelectSession = (sessionId) => {
     setActiveSessionId(sessionId);
     saveActiveSessionId(sessionId);
@@ -82,7 +90,7 @@ export function App() {
     setSessions(getSessions());
   };
 
-  // Fetch System Information (Health, Models, Knowledge Documents)
+  // Fetch Health, Models & Knowledge Base Data
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -118,7 +126,7 @@ export function App() {
     };
   }, [isAuthenticated]);
 
-  // Listen for 401 Session Expiration Events
+  // Auth Expired Listener
   useEffect(() => {
     const handleAuthExpired = () => {
       clearToken();
@@ -134,12 +142,12 @@ export function App() {
   }, []);
 
   const handleLoginSuccess = (userObj) => {
-    setCurrentUser(userObj || { username: 'operator', role: 'USER' });
+    setCurrentUser(userObj || { username: 'operator', role: 'ADMIN' });
     setIsAuthenticated(true);
   };
 
   const handleRegisterSuccess = (userObj) => {
-    setCurrentUser(userObj || { username: 'operator', role: 'USER' });
+    setCurrentUser(userObj || { username: 'operator', role: 'ADMIN' });
     setIsAuthenticated(true);
   };
 
@@ -168,114 +176,80 @@ export function App() {
     );
   }
 
-  // --- AUTHENTICATED WORKBENCH STATE ---
+  // --- AUTHENTICATED WORKSPACE & ADMIN CONSOLE ---
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--mrpl-bg-light)' }}>
-      {/* MRPL Header (64px height, white bg, bottom border #4A7C2A) */}
-      <header
-        style={{
-          height: '64px',
-          backgroundColor: 'var(--mrpl-bg-main)',
-          borderBottom: '1px solid var(--mrpl-primary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          boxShadow: 'var(--shadow-subtle)',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '20px', fontWeight: 600, color: 'var(--mrpl-primary)', lineHeight: 1.2 }}>
-              MRPL
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--mrpl-text-secondary)', fontWeight: 500 }}>
-              Sovereign AI Workbench
-            </span>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--mrpl-bg)' }}>
+      {/* 1. Master Enterprise Top Header */}
+      <TopHeader
+        currentUser={currentUser}
+        health={healthData}
+        currentView={currentView}
+        activeAdminTab={activeAdminTab}
+        onSwitchView={setCurrentView}
+        onLogout={handleLogout}
+      />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Security Indicator */}
-          <LocalOnlyBadge
-            external_calls_enabled={healthData?.external_calls_enabled}
-            health={healthData}
+      {/* 2. Render Admin Console Shell when currentView === 'admin' */}
+      {currentView === 'admin' && (
+        <>
+          <AdminNavTabs
+            activeTab={activeAdminTab}
+            onTabChange={setActiveAdminTab}
+            modelCount={modelsData?.length || 4}
+            docCount={documentsData?.length || 6}
           />
+          <DynamicBreadcrumb activeTab={activeAdminTab} onTabChange={setActiveAdminTab} />
+          <main style={{ flex: 1, padding: '24px', overflowY: 'auto', backgroundColor: 'var(--mrpl-bg)' }}>
+            {activeAdminTab === 'users' && <UsersView currentUser={currentUser} />}
+            {activeAdminTab === 'external-api' && <ExternalApiView healthStatus={healthData} />}
+            {activeAdminTab === 'models' && <ModelsView modelsData={modelsData} />}
+            {activeAdminTab === 'knowledge-base' && <KnowledgeBaseView documentsData={documentsData} />}
+            {activeAdminTab === 'sovereignty' && <SovereigntyView healthStatus={healthData} />}
+            {activeAdminTab === 'chat' && (
+              <div style={{ height: 'calc(100vh - 12rem)', display: 'flex', overflow: 'hidden' }} className="card">
+                <SessionSidebar
+                  sessions={sessions}
+                  activeSessionId={activeSessionId}
+                  onSelectSession={handleSelectSession}
+                  onCreateSession={handleCreateSession}
+                  onRenameSession={handleRenameSession}
+                  onDeleteSession={handleDeleteSession}
+                />
+                <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+                  <ChatWindow
+                    activeSession={activeSession}
+                    onUpdateSessionMessages={handleUpdateSessionMessages}
+                    onAutoRenameSession={handleRenameSession}
+                    onCreateSession={handleCreateSession}
+                  />
+                </div>
+              </div>
+            )}
+          </main>
+        </>
+      )}
 
-          {/* Toggle System Panels (Models & Knowledge Base) */}
-          <button
-            onClick={() => setShowSystemPanels(!showSystemPanels)}
-            className="btn-secondary"
-            style={{
-              fontSize: '12px',
-              padding: '4px 10px',
-              backgroundColor: showSystemPanels ? 'var(--mrpl-bg-green-light)' : 'var(--mrpl-bg-main)',
-              color: showSystemPanels ? 'var(--mrpl-primary)' : 'var(--mrpl-text-primary)',
-            }}
-          >
-            {showSystemPanels ? 'Hide Context Panels' : 'Show Context Panels'}
-          </button>
-
-          {/* User Account Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--mrpl-text-primary)' }}>
-            <span>👤 <strong>{currentUser?.username || 'Operator'}</strong></span>
-          </div>
-
-          {/* Logout Trigger */}
-          <button
-            onClick={handleLogout}
-            className="btn-secondary"
-            style={{
-              fontSize: '12px',
-              padding: '4px 10px',
-              color: 'var(--status-failed-fg)',
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      {/* Main Workspace Body */}
-      <main style={{ flex: 1, padding: '16px', display: 'flex', gap: '16px', overflow: 'hidden' }}>
-        {/* Persistent Left Session Sidebar */}
-        <SessionSidebar
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={handleSelectSession}
-          onCreateSession={handleCreateSession}
-          onRenameSession={handleRenameSession}
-          onDeleteSession={handleDeleteSession}
-        />
-
-        {/* Primary Chat Workspace */}
-        <div style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
-          <ChatWindow
-            activeSession={activeSession}
-            onUpdateSessionMessages={handleUpdateSessionMessages}
-            onAutoRenameSession={handleRenameSession}
+      {/* 3. Render Sovereign AI Workbench Shell when currentView === 'workbench' */}
+      {currentView === 'workbench' && (
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <SessionSidebar
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSelectSession={handleSelectSession}
             onCreateSession={handleCreateSession}
+            onRenameSession={handleRenameSession}
+            onDeleteSession={handleDeleteSession}
           />
+          <main style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+            <ChatWindow
+              activeSession={activeSession}
+              onUpdateSessionMessages={handleUpdateSessionMessages}
+              onAutoRenameSession={handleRenameSession}
+              onCreateSession={handleCreateSession}
+            />
+          </main>
         </div>
-
-        {/* Optional Right System Context Panels (Models & Knowledge Base) */}
-        {showSystemPanels && (
-          <aside
-            style={{
-              width: '380px',
-              height: '100%',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <ModelRegistryPanel models={modelsData} />
-            <KnowledgeBasePanel documents={documentsData} />
-          </aside>
-        )}
-      </main>
+      )}
     </div>
   );
 }
